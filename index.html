@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Revisión de EPP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .date-picker {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .epp-list {
+            margin-top: 20px;
+        }
+        .epp-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .epp-name {
+            flex: 1;
+        }
+        .epp-status {
+            display: flex;
+            gap: 10px;
+        }
+        .status-radio {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+        .status-radio input {
+            margin-right: 5px;
+        }
+        button {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #34495e;
+        }
+        .worker-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .worker-card {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            width: calc(33% - 10px);
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+        .worker-card:hover {
+            background-color: #eef4fa;
+            border-color: #2c3e50;
+        }
+        .summary-section {
+            margin-top: 20px;
+        }
+        .history-item {
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .history-item:hover {
+            background-color: #eef4fa;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Revisión Diaria de EPP</h1>
+            <input type="date" id="current-date" class="date-picker">
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="check">Revisión</div>
+            <div class="tab" data-tab="history">Historial</div>
+            <div class="tab" data-tab="workers">Trabajadores</div>
+        </div>
+
+        <div id="check-tab" class="tab-content active">
+            <div class="form-group">
+                <label for="worker-select">Seleccionar Trabajador:</label>
+                <select id="worker-select">
+                    <option value="">Seleccione un trabajador</option>
+                    <option value="1">Juan Pérez - Operario</option>
+                    <option value="2">María Gómez - Supervisora</option>
+                    <option value="3">Pedro Rodríguez - Técnico</option>
+                    <option value="4">Ana Martínez - Operaria</option>
+                    <option value="5">Luis Sánchez - Mantenimiento</option>
+                </select>
+            </div>
+
+            <div id="epp-checklist" class="epp-list" style="display: none;">
+                <h2>Lista de Verificación de EPP</h2>
+                
+                <div class="epp-item">
+                    <div class="epp-name">1. Casco de seguridad</div>
+                    <div class="epp-status">
+                        <div class="status-radio">
+                            <input type="radio" name="casco" value="cumple" id="casco-cumple">
+                            <label for="casco-cumple">Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="casco" value="no-cumple" id="casco-no-cumple">
+                            <label for="casco-no-cumple">No Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="casco" value="na" id="casco-na">
+                            <label for="casco-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="epp-item">
+                    <div class="epp-name">2. Lentes de protección</div>
+                    <div class="epp-status">
+                        <div class="status-radio">
+                            <input type="radio" name="lentes" value="cumple" id="lentes-cumple">
+                            <label for="lentes-cumple">Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="lentes" value="no-cumple" id="lentes-no-cumple">
+                            <label for="lentes-no-cumple">No Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="lentes" value="na" id="lentes-na">
+                            <label for="lentes-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="epp-item">
+                    <div class="epp-name">3. Protección auditiva</div>
+                    <div class="epp-status">
+                        <div class="status-radio">
+                            <input type="radio" name="auditiva" value="cumple" id="auditiva-cumple">
+                            <label for="auditiva-cumple">Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="auditiva" value="no-cumple" id="auditiva-no-cumple">
+                            <label for="auditiva-no-cumple">No Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="auditiva" value="na" id="auditiva-na">
+                            <label for="auditiva-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="epp-item">
+                    <div class="epp-name">4. Mascarilla / Protección respiratoria</div>
+                    <div class="epp-status">
+                        <div class="status-radio">
+                            <input type="radio" name="respiratoria" value="cumple" id="respiratoria-cumple">
+                            <label for="respiratoria-cumple">Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="respiratoria" value="no-cumple" id="respiratoria-no-cumple">
+                            <label for="respiratoria-no-cumple">No Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="respiratoria" value="na" id="respiratoria-na">
+                            <label for="respiratoria-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="epp-item">
+                    <div class="epp-name">5. Guantes de seguridad</div>
+                    <div class="epp-status">
+                        <div class="status-radio">
+                            <input type="radio" name="guantes" value="cumple" id="guantes-cumple">
+                            <label for="guantes-cumple">Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="guantes" value="no-cumple" id="guantes-no-cumple">
+                            <label for="guantes-no-cumple">No Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="guantes" value="na" id="guantes-na">
+                            <label for="guantes-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="epp-item">
+                    <div class="epp-name">6. Calzado de seguridad</div>
+                    <div class="epp-status">
+                        <div class="status-radio">
+                            <input type="radio" name="calzado" value="cumple" id="calzado-cumple">
+                            <label for="calzado-cumple">Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="calzado" value="no-cumple" id="calzado-no-cumple">
+                            <label for="calzado-no-cumple">No Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="calzado" value="na" id="calzado-na">
+                            <label for="calzado-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="epp-item">
+                    <div class="epp-name">7. Arnés de seguridad</div>
+                    <div class="epp-status">
+                        <div class="status-radio">
+                            <input type="radio" name="arnes" value="cumple" id="arnes-cumple">
+                            <label for="arnes-cumple">Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="arnes" value="no-cumple" id="arnes-no-cumple">
+                            <label for="arnes-no-cumple">No Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="arnes" value="na" id="arnes-na">
+                            <label for="arnes-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="epp-item">
+                    <div class="epp-name">8. Ropa de protección / Chaleco reflectivo</div>
+                    <div class="epp-status">
+                        <div class="status-radio">
+                            <input type="radio" name="ropa" value="cumple" id="ropa-cumple">
+                            <label for="ropa-cumple">Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="ropa" value="no-cumple" id="ropa-no-cumple">
+                            <label for="ropa-no-cumple">No Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="ropa" value="na" id="ropa-na">
+                            <label for="ropa-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="epp-item">
+                    <div class="epp-name">9. Protector facial</div>
+                    <div class="epp-status">
+                        <div class="status-radio">
+                            <input type="radio" name="facial" value="cumple" id="facial-cumple">
+                            <label for="facial-cumple">Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="facial" value="no-cumple" id="facial-no-cumple">
+                            <label for="facial-no-cumple">No Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="facial" value="na" id="facial-na">
+                            <label for="facial-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="epp-item">
+                    <div class="epp-name">10. Otros EPP específicos</div>
+                    <div class="epp-status">
+                        <div class="status-radio">
+                            <input type="radio" name="otros" value="cumple" id="otros-cumple">
+                            <label for="otros-cumple">Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="otros" value="no-cumple" id="otros-no-cumple">
+                            <label for="otros-no-cumple">No Cumple</label>
+                        </div>
+                        <div class="status-radio">
+                            <input type="radio" name="otros" value="na" id="otros-na">
+                            <label for="otros-na">N/A</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="comments">Comentarios / Observaciones:</label>
+                    <textarea id="comments" rows="4" placeholder="Ingrese aquí cualquier observación o medida correctiva..."></textarea>
+                </div>
+                
+                <button id="save-btn">Guardar Revisión</button>
+                
+                <div id="success-message" class="success-message">
+                    Revisión guardada exitosamente.
+                </div>
+            </div>
+        </div>
+
+        <div id="history-tab" class="tab-content">
+            <h2>Historial de Revisiones</h2>
+            <div class="form-group">
+                <label for="history-worker">Filtrar por trabajador:</label>
+                <select id="history-worker">
+                    <option value="">Todos los trabajadores</option>
+                    <option value="1">Juan Pérez - Operario</option>
+                    <option value="2">María Gómez - Supervisora</option>
+                    <option value="3">Pedro Rodríguez - Técnico</option>
+                    <option value="4">Ana Martínez - Operaria</option>
+                    <option value="5">Luis Sánchez - Mantenimiento</option>
+                </select>
+            </div>
+            
+            <div id="history-list">
+                <div class="history-item">
+                    <strong>Juan Pérez - Operario</strong> | 26/02/2025
+                    <div>Cumplimiento: 9/10 EPP</div>
+                </div>
+                <div class="history-item">
+                    <strong>María Gómez - Supervisora</strong> | 26/02/2025
+                    <div>Cumplimiento: 10/10 EPP</div>
+                </div>
+                <div class="history-item">
+                    <strong>Luis Sánchez - Mantenimiento</strong> | 25/02/2025
+                    <div>Cumplimiento: 8/10 EPP</div>
+                </div>
+                <div class="history-item">
+                    <strong>Ana Martínez - Operaria</strong> | 25/02/2025
+                    <div>Cumplimiento: 9/10 EPP</div>
+                </div>
+                <div class="history-item">
+                    <strong>Pedro Rodríguez - Técnico</strong> | 24/02/2025
+                    <div>Cumplimiento: 10/10 EPP</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="workers-tab" class="tab-content">
+            <h2>Gestión de Trabajadores</h2>
+            <div class="form-group">
+                <label for="worker-search">Buscar trabajador:</label>
+                <input type="text" id="worker-search" placeholder="Nombre del trabajador...">
+            </div>
+            
+            <div class="worker-list">
+                <div class="worker-card">
+                    <strong>Juan Pérez</strong>
+                    <div>Cargo: Operario</div>
+                    <div>Área: Producción</div>
+                </div>
+                <div class="worker-card">
+                    <strong>María Gómez</strong>
+                    <div>Cargo: Supervisora</div>
+                    <div>Área: Logística</div>
+                </div>
+                <div class="worker-card">
+                    <strong>Pedro Rodríguez</strong>
+                    <div>Cargo: Técnico</div>
+                    <div>Área: Mantenimiento</div>
+                </div>
+                <div class="worker-card">
+                    <strong>Ana Martínez</strong>
+                    <div>Cargo: Operaria</div>
+                    <div>Área: Producción</div>
+                </div>
+                <div class="worker-card">
+                    <strong>Luis Sánchez</strong>
+                    <div>Cargo: Mantenimiento</div>
+                    <div>Área: Instalaciones</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configurar la fecha actual
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        document.getElementById('current-date').value = formattedDate;
+        
+        // Mostrar checklist cuando se selecciona un trabajador
+        document.getElementById('worker-select').addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('epp-checklist').style.display = 'block';
+            } else {
+                document.getElementById('epp-checklist').style.display = 'none';
+            }
+        });
+        
+        // Gestionar tabs
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remover clase activa de todas las tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                // Añadir clase activa a la tab seleccionada
+                this.classList.add('active');
+                
+                // Ocultar todos los contenidos de tab
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Mostrar el contenido de la tab seleccionada
+                const tabName = this.getAttribute('data-tab');
+                document.getElementById(tabName + '-tab').classList.add('active');
+            });
+        });
+        
+        // Simular guardado de revisión
+        document.getElementById('save-btn').addEventListener('click', function() {
+            const successMessage = document.getElementById('success-message');
+            successMessage.style.display = 'block';
+            
+            // Ocultar mensaje después de 3 segundos
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+                
+                // Limpiar selecciones
+                document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.checked = false;
+                });
+                document.getElementById('comments').value = '';
+                document.getElementById('worker-select').value = '';
+                document.getElementById('epp-checklist').style.display = 'none';
+                
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
+Last edited 4 hours ago
